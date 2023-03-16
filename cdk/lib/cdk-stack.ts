@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 const lambdaCodeDirectory = path.resolve(__dirname, '../../', 'app/backend/dist');
+const lambdaCodeAsset = lambda.Code.fromAsset(lambdaCodeDirectory);
 
 if(!fs.existsSync(lambdaCodeDirectory))
   throw new Error(`Please build the code directory with 'npm run build' first (${lambdaCodeDirectory})`);
@@ -22,13 +23,15 @@ export class CdkStack extends Stack {
       }
     });
 
-    const handler = new lambda.Function(this, "PutOrderLambda", {
+    const putOrderHandler = new lambda.Function(this, "PutOrderLambda", {
       runtime: lambda.Runtime.NODEJS_14_X, // So we can use async in widget.js
-      code: lambda.Code.fromAsset("resources"),
+      code: lambdaCodeAsset,
       handler: "handlers.putOrder",
       environment: {
         ORDERS_TABLE_NAME: ordersTable.tableName
       }
-    })
+    });
+
+    ordersTable.grantWriteData(putOrderHandler);
   }
 }
