@@ -5,6 +5,8 @@ import * as orderDao from './order-dao';
 export async function postOrder(event: APIGatewayProxyEventV2, context: Context) {
     const requestBody = JSON.parse(event.body ?? '{}') as orderDao.OrderModel;
 
+    console.info(JSON.stringify(event));
+
     if(requestBody.item == null || requestBody.quantity < 0 || Number.isNaN(requestBody.quantity)) {
         return {
             statusCode: '400',

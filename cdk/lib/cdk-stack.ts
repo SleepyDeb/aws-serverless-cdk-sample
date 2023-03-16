@@ -37,12 +37,11 @@ export class CdkStack extends Stack {
         ORDERS_TABLE_NAME: ordersTable.tableName
       }
     });
-
     ordersTable.grantWriteData(postOrderLambda);
-
+    
     const api = new apigw.RestApi(this, 'orders-api');
 
-    const books = api.root.addResource('orders');
-    const booksPost = books.addMethod('POST', new apigw.LambdaIntegration(postOrderLambda));    
+    const orders = api.root.addResource('orders');
+    const ordersPost = orders.addMethod('POST', new apigw.LambdaIntegration(postOrderLambda));
   }
 }
