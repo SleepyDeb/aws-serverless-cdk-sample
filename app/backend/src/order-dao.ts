@@ -1,4 +1,4 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import * as crypto from 'crypto';
 
@@ -37,4 +37,13 @@ export async function getOrder(orderId: string) {
     }));
 
     return response.Item!;
+}
+
+
+export async function listOrders() {
+    const response = await docClient.send(new ScanCommand({
+        TableName
+    }));
+
+    return response.Items;
 }

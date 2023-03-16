@@ -3,7 +3,7 @@ import * as orderDao from './order-dao';
 
 // https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
 export async function postOrder(event: APIGatewayProxyEventV2, context: Context) {
-    const requestBody = JSON.parse(event.body ?? '{}') as orderDao.OrderModel;
+    const requestBody = JSON.parse(event.body ?? '{}') as orderDao.OrderModel;    
 
     console.info(JSON.stringify(event));
 
@@ -22,6 +22,7 @@ export async function postOrder(event: APIGatewayProxyEventV2, context: Context)
     }
 }
 
+// GET orders/{orderId}
 export async function getOrder(event: APIGatewayProxyEventV2, context: Context) {    
     const orderId = event.pathParameters!['orderId']!;
     console.info(JSON.stringify(event));    
@@ -31,5 +32,15 @@ export async function getOrder(event: APIGatewayProxyEventV2, context: Context) 
     return {
         statusCode: '200',
         body: JSON.stringify(order)
+    }
+}
+
+// GET orders
+export async function listOrders(event: APIGatewayProxyEventV2, context: Context) {            
+    const orders = await orderDao.listOrders();
+
+    return {
+        statusCode: '200',
+        body: JSON.stringify(orders)
     }
 }
