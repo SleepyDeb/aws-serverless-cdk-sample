@@ -1,5 +1,5 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import * as crypto from 'crypto';
 
 export interface OrderModel {
@@ -26,4 +26,15 @@ export async function createOrder(order: OrderModel) {
         TableName,
         Item: order
     }));
+
+    return order;
+}
+
+export async function getOrder(orderId: string) {
+    const response = await docClient.send(new GetCommand({
+        TableName,
+        Key: { id: orderId }
+    }));
+
+    return response.Item!;
 }

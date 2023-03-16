@@ -14,10 +14,22 @@ export async function postOrder(event: APIGatewayProxyEventV2, context: Context)
         }
     }
 
-    await orderDao.createOrder(requestBody);
+    const order = await orderDao.createOrder(requestBody);
 
     return {
         statusCode: '200',
-        body: JSON.stringify({})
+        body: JSON.stringify(order)
+    }
+}
+
+export async function getOrder(event: APIGatewayProxyEventV2, context: Context) {    
+    const orderId = event.pathParameters!['orderId']!;
+    console.info(JSON.stringify(event));    
+
+    const order = await orderDao.getOrder(orderId);
+
+    return {
+        statusCode: '200',
+        body: JSON.stringify(order)
     }
 }

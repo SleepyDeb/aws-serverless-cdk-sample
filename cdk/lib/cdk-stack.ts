@@ -38,10 +38,10 @@ export class CdkStack extends Stack {
       }
     });
     ordersTable.grantWriteData(postOrderLambda);
-    
+
     const api = new apigw.RestApi(this, 'orders-api');
 
     const orders = api.root.addResource('orders');
-    const ordersPost = orders.addMethod('POST', new apigw.LambdaIntegration(postOrderLambda));
+    orders.addMethod('POST', new apigw.LambdaIntegration(postOrderLambda));
   }
 }
