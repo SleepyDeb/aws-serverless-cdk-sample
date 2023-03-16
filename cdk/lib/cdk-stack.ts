@@ -1,24 +1,16 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
+import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamo from 'aws-cdk-lib/aws-dynamodb';
-import * as path from 'path';
-import * as fs from 'fs';
-import * as fsex from 'fs-extra';
+import * as apigw from 'aws-cdk-lib/aws-apigateway';
 
-const lambdaCodeDirectory = path.resolve(__dirname, '../../', 'app/backend/dist/src');
-const lambdaCodeAsset = lambda.Code.fromAsset(lambdaCodeDirectory);
-if(!fs.existsSync(lambdaCodeDirectory))
-  throw new Error(`Please build the code directory with 'npm run build' first (${lambdaCodeDirectory})`);
-  
-const lambdaNodeModulesDirectory = path.resolve(__dirname, '../../', 'app/backend/node_modules/');
-const lambdaNodeModulesDirectoryDestination = path.resolve(__dirname, '../../', 'app/backend/layer/nodejs/node_modules/');
-const lambdaNodeModulesDirectoryLayerDirectory = path.resolve(__dirname, '../../', 'app/backend/layer/');
-fsex.copySync(lambdaNodeModulesDirectory, lambdaNodeModulesDirectoryDestination, { overwrite: true });
-const lambdaLayerAsset = lambda.Code.fromAsset(lambdaNodeModulesDirectoryLayerDirectory);
+export interface CdkStackProps {
+  lambda: lambda.Code;
+  layer: lambda.Code;
+}
 
 export class CdkStack extends Stack {
-  constructor(scope: Construct, id: string, props?: StackProps) {
+  constructor(scope: Construct, id: string, props?: StackProps & CdkStackProps) {
     super(scope, id, props);
 
     const ordersTable = new dynamo.Table(this, `orders-table`, {
@@ -26,24 +18,31 @@ export class CdkStack extends Stack {
       partitionKey: {
         name: 'id',
         type: dynamo.AttributeType.STRING
-      }
+      },
+      removalPolicy: RemovalPolicy.DESTROY
     });
 
     const basicLambdaLayer = new lambda.LayerVersion(this, `NodeModulesDepsLayer`, {
       compatibleRuntimes: [ lambda.Runtime.NODEJS_18_X ],
-      code: lambdaLayerAsset
+      code: props!.layer
     })
 
-    const putOrderHandler = new lambda.Function(this, "PutOrderLambda", {
+    const postOrderLambda = new lambda.Function(this, "PostOrderLambda", {
       runtime: lambda.Runtime.NODEJS_18_X,
-      code: lambdaCodeAsset,
-      handler: "handlers.putOrder",
+      code: props!.lambda,
+      handler: "handlers.postOrder",
       layers: [ basicLambdaLayer ],
+      description: new Date().toString(),
       environment: {
         ORDERS_TABLE_NAME: ordersTable.tableName
       }
     });
 
-    ordersTable.grantWriteData(putOrderHandler);
+    ordersTable.grantWriteData(postOrderLambda);
+
+    const api = new apigw.RestApi(this, 'orders-api');
+
+    const books = api.root.addResource('orders');
+    const booksPost = books.addMethod('POST', new apigw.LambdaIntegration(postOrderLambda));    
   }
 }

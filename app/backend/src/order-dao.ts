@@ -20,9 +20,9 @@ const docClient = DynamoDBDocumentClient.from(dynamoClient, {
     }
 });
 
-export async function putOrder(order: OrderModel) {
+export async function createOrder(order: OrderModel) {
     order.id = crypto.randomUUID();
-    await dynamoClient.send(new PutCommand({
+    await docClient.send(new PutCommand({
         TableName,
         Item: order
     }));

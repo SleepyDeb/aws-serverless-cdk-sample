@@ -1,8 +1,7 @@
 {
   "name": "backend",
   "scripts": {
-    "build": "tsc",
-    "build-install": "tsc && npm install --prefix ./nodejs",
+    "build": "tsc",    
     "test": "cross-env AWS_PROFILE=personal AWS_REGION=eu-central-1 ORDERS_TABLE_NAME=sample-orders-table jest"
   },
   "devDependencies": {

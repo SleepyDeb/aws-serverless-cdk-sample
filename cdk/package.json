@@ -11,6 +11,7 @@
     "cdk": "cross-env AWS_PROFILE=personal AWS_REGION=eu-central-1 cdk"
   },
   "devDependencies": {
+    "@types/fs-extra": "^11.0.1",
     "@types/jest": "^29.4.0",
     "@types/node": "18.14.6",
     "aws-cdk": "2.69.0",
@@ -21,7 +22,9 @@
     "typescript": "~4.9.5"
   },
   "dependencies": {
+    "@aws-cdk/aws-apigatewayv2-integrations-alpha": "^2.69.0-alpha.0",
     "aws-cdk-lib": "2.69.0",
-    "constructs": "^10.0.0"
+    "constructs": "^10.0.0",
+    "fs-extra": "^11.1.0"
   }
 }
