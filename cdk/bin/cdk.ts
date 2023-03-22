@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as fsex from 'fs-extra';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as file from 'fs/promises';
-import { CdkStack } from '../lib/cdk-stack';
+import { CdkBackendStack } from '../lib/cdk-stack';
 import { exec } from 'child_process';
 import * as nodeConfigProvider from "@aws-sdk/node-config-provider";
 import * as credentialProviderNode from "@aws-sdk/credential-provider-node";
@@ -95,7 +95,7 @@ export async function main() {
     const env = await loadEnvironment();
     const app = new cdk.App();
 
-    new CdkStack(app, 'CdkStack', {
+    new CdkBackendStack(app, 'CdkStack', {
         stackName: 'demo-app',
         env,
         ... build,
