@@ -5,7 +5,7 @@ import * as cdk from 'aws-cdk-lib';
 
 export class CdkFrontendStack extends Stack {
     constructor(scope: Construct, id: string, props: StackProps & CdkStackProps) {
-        super();
+        super(scope, id, props);
         
         const zoneName = props.zone_name;
         const zone = cdk.aws_route53.HostedZone.fromLookup(this, `route53-hosted-zone`, {
