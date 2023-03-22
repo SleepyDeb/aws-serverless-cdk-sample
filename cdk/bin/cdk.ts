@@ -63,7 +63,8 @@ export async function loadConfiguration() {
         zone_name: string,
         record_name: string,
         certificate_arn: string,
-        dash_record_name: string
+        dash_record_name: string,
+        idp_prefix: string
     };
 }
 
@@ -100,7 +101,7 @@ export async function main() {
     const app = new cdk.App();
     new CdkServerlessAppStack(app, `demo-app-stack`, {
         stackName: `demo-app-stack`,
-        ... env,
+        env,
         ... build,
         ... config
     })

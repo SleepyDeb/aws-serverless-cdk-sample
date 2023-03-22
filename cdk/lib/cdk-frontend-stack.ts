@@ -4,7 +4,7 @@ import { CdkStackProps } from "./cdk-backend-stack";
 import * as cdk from 'aws-cdk-lib';
 
 export class CdkFrontendStack extends NestedStack {
-    constructor(scope: Construct, id: string, props: StackProps & CdkStackProps) {
+    constructor(scope: Construct, id: string, props: StackProps & CdkStackProps & { cognitoOpenIdConnectUrl: string }) {
         super(scope, id, props);
         
         const zoneName = props.zone_name;
@@ -24,7 +24,8 @@ export class CdkFrontendStack extends NestedStack {
         }).certificateArn;
         
         const bucket = new cdk.aws_s3.Bucket(this, `frontend-bucket`, {
-            bucketName: `${props.stackName}-bucket`
+            bucketName: `${props.stackName}-bucket`,
+            removalPolicy: cdk.RemovalPolicy.DESTROY
         });
 
         const cloudfrontOAI = new cdk.aws_cloudfront.OriginAccessIdentity(this, `cloudfront-oai`, {
@@ -155,6 +156,12 @@ export class CdkFrontendStack extends NestedStack {
             }
         });
 
+        const envDeclaration64 = Buffer.from(`export const environment = {
+            apiEndpoint: ${props.record_name},
+            openidconnectEndpoint: ${props.cognitoOpenIdConnectUrl},
+            clientId: ${props.cognitoClientId}
+        };`).toString('base64')
+
         // https://docs.aws.amazon.com/it_it/AmazonCloudFront/latest/DeveloperGuide/Invalidation.html
         const project = new cdk.aws_codebuild.Project(this, 'web-codebuild', {
             projectName: `${props.stackName}-codebuild-project`,
@@ -167,6 +174,7 @@ export class CdkFrontendStack extends NestedStack {
                         commands: [
                             // Add cognito variables
                             "cd app/frontend/",
+                            `echo ${envDeclaration64} | base64 --decode > src/environments/environment.production.ts`,
                             "npm install",
                             "npx ng build --configuration=production"
                         ]

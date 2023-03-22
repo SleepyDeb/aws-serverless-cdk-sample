@@ -13,6 +13,7 @@ export interface CdkServerlessAppProps {
     record_name: string;
     certificate_arn: string;
     dash_record_name: string;
+    idp_prefix: string;
 }
 export class CdkServerlessAppStack extends Stack {
     constructor(scope: Construct, id: string, props: StackProps & CdkServerlessAppProps) {
@@ -32,7 +33,8 @@ export class CdkServerlessAppStack extends Stack {
             stackName: 'demo-app-frontend',
             ... props,
             cognitoPool: idp.userPool,
-            cognitoClientId: idp.clientId
+            cognitoClientId: idp.clientId,
+            cognitoOpenIdConnectUrl: idp.openidconnectUrl
         });
     }
 }

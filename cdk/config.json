@@ -2,5 +2,6 @@
     "zone_name": "iotty.dev",
     "record_name": "api-demo",    
     "dash_record_name": "www-demo",
+    "idp_prefix": "app-demo",
     "certificate_arn": "arn:aws:acm:eu-central-1:846173919647:certificate/c30c9173-5f24-4bc2-af31-030eeb32daa1"
 }
