@@ -14,7 +14,8 @@ export interface CdkStackProps {
   zone_name: string;
   record_name: string;
   certificate_arn: string;
-  cognito: cognito.IUserPool;
+  dash_record_name: string;
+  cognitoPool: cognito.IUserPool;
   cognitoClientId: string;
 }
 
@@ -99,7 +100,7 @@ export class CdkBackendStack extends Stack {
     });
 
     const auth = new apigw.CognitoUserPoolsAuthorizer(this, 'app-api-authorizer', {
-      cognitoUserPools: [ props.cognito ]
+      cognitoUserPools: [ props.cognitoPool ]
     });
 
     const authProps = {

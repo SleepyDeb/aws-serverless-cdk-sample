@@ -61,7 +61,8 @@ export async function loadConfiguration() {
     return JSON.parse((await file.readFile(configFilePath)).toString()) as {
         zone_name: string,
         record_name: string,
-        certificate_arn: string
+        certificate_arn: string,
+        dash_record_name: string
     };
 }
 
@@ -97,9 +98,8 @@ export async function main() {
     const env = await loadEnvironment();
     const app = new cdk.App();
 
-    new CdkIdpStack(app, 'IdpStack', {
+    const idp = new CdkIdpStack(app, 'IdpStack', {
         stackName: 'demo-app-idp',
-        env,
         ... build,
         ... config
     });
@@ -107,13 +107,17 @@ export async function main() {
         stackName: 'demo-app-backend',
         env,
         ... build,
-        ... config
+        ... config,
+        cognitoPool: idp.userPool,
+        cognitoClientId: idp.clientId
     });
     new CdkFrontendStack(app, 'FrontendStack', {
         stackName: 'demo-app-frontend',
         env,
         ... build,
-        ... config
+        ... config,
+        cognitoPool: idp.userPool,
+        cognitoClientId: idp.clientId
     });
 }
 

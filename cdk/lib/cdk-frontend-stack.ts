@@ -4,7 +4,7 @@ import { CdkStackProps } from "./cdk-backend-stack";
 import * as cdk from 'aws-cdk-lib';
 
 export class CdkFrontendStack extends Stack {
-    constructor(scope: Construct, id: string, props: StackProps & { zone_name: string, dash_record_name: string }) {
+    constructor(scope: Construct, id: string, props: StackProps & CdkStackProps) {
         super(scope, id, props);
         
         const zoneName = props.zone_name;
