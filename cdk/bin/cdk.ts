@@ -1,19 +1,15 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
 import * as path from 'path';
-import * as fs from 'fs';
 import * as fsex from 'fs-extra';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as s3d from 'aws-cdk-lib/aws-s3-deployment';
 import * as file from 'fs/promises';
-import { CdkBackendStack } from '../lib/cdk-backend-stack';
 import { exec } from 'child_process';
 import * as nodeConfigProvider from "@aws-sdk/node-config-provider";
-import * as credentialProviderNode from "@aws-sdk/credential-provider-node";
 import * as configResolver from "@aws-sdk/config-resolver";
 import * as sts from "@aws-sdk/client-sts";
 import * as ec2 from "@aws-sdk/client-ec2";
-import { CdkIdpStack } from '../lib/cdk-idp-stack';
-import { CdkFrontendStack } from '../lib/cdk-frontend-stack';
 import { CdkServerlessAppStack } from '../lib/cdk-serverless-app';
 
 async function cmd_run(command: string) {
@@ -49,11 +45,19 @@ export async function createLambdaAndLayerAssets() {
     fsex.copySync(nodeModulesDir, nodeModulesDestinationDir, { overwrite: true });
     const lambdaLayerAsset = lambda.Code.fromAsset(lambdaLayerDir);
 
+    const frontendSourceDir = path.resolve(__dirname, '../../', 'app/frontend/');
+    process.chdir(frontendSourceDir);
+    await cmd_run('npm install');
+    await cmd_run('npm run build -- --configuration=production');
+    const angularDeployDir = path.join(frontendSourceDir, '/dist/');
+    const angularLayerAsset = s3d.Source.asset(angularDeployDir);
+
     process.chdir(oldCwd);
 
     return {
         lambda: lambdaCodeAsset,
-        layer: lambdaLayerAsset
+        layer: lambdaLayerAsset,
+        angular: angularLayerAsset
     }
 }
 

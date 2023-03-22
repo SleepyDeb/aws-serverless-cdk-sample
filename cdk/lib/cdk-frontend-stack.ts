@@ -25,7 +25,8 @@ export class CdkFrontendStack extends NestedStack {
         
         const bucket = new cdk.aws_s3.Bucket(this, `frontend-bucket`, {
             bucketName: `${props.stackName}-bucket`,
-            removalPolicy: cdk.RemovalPolicy.DESTROY
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            autoDeleteObjects: true
         });
 
         const cloudfrontOAI = new cdk.aws_cloudfront.OriginAccessIdentity(this, `cloudfront-oai`, {
@@ -157,10 +158,18 @@ export class CdkFrontendStack extends NestedStack {
         });
 
         const envDeclaration64 = Buffer.from(`export const environment = {
-            apiEndpoint: ${props.record_name},
-            openidconnectEndpoint: ${props.cognitoOpenIdConnectUrl},
-            clientId: ${props.cognitoClientId}
+            apiEndpoint: "${props.record_name}",
+            openidconnectEndpoint: "${props.cognitoOpenIdConnectUrl}",
+            clientId: "${props.cognitoClientId}"
         };`).toString('base64')
+
+        new cdk.aws_s3_deployment.BucketDeployment(this, 'web-bucket-deployment', {
+            sources: [ props.angular ],
+            destinationKeyPrefix: 'dashboard',
+            destinationBucket: bucket,
+            distribution,
+            distributionPaths: ['/*'],
+        });
 
         // https://docs.aws.amazon.com/it_it/AmazonCloudFront/latest/DeveloperGuide/Invalidation.html
         const project = new cdk.aws_codebuild.Project(this, 'web-codebuild', {
@@ -176,7 +185,7 @@ export class CdkFrontendStack extends NestedStack {
                             "cd app/frontend/",
                             `echo ${envDeclaration64} | base64 --decode > src/environments/environment.production.ts`,
                             "npm install",
-                            "npx ng build --configuration=production"
+                            "npm run build -- --configuration=production"
                         ]
                     },
                     post_build: {
@@ -197,6 +206,9 @@ export class CdkFrontendStack extends NestedStack {
             target: new cdk.aws_events_targets.CodeBuildProject(project),
             branches: [ branchOrRef ]
         });
+
+        new cdk.CfnOutput(scope, `angular-environment`, { value: Buffer.from(envDeclaration64, 'base64').toString() });
+        new cdk.CfnOutput(scope, `angular-repository`, { value: repository.repositoryCloneUrlSsh });
     }
 
 

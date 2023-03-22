@@ -1,6 +1,7 @@
 import { Stack, StackProps } from "aws-cdk-lib";
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as s3d from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from "constructs";
 import { CdkBackendStack } from "./cdk-backend-stack";
 import { CdkFrontendStack } from "./cdk-frontend-stack";
@@ -9,6 +10,7 @@ import { CdkIdpStack } from "./cdk-idp-stack";
 export interface CdkServerlessAppProps {
     lambda: lambda.Code;
     layer: lambda.Code;
+    angular: s3d.ISource;
     zone_name: string;
     record_name: string;
     certificate_arn: string;

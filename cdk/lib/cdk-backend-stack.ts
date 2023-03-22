@@ -5,12 +5,14 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamo from 'aws-cdk-lib/aws-dynamodb';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as s3d from 'aws-cdk-lib/aws-s3-deployment';
 import * as r53 from 'aws-cdk-lib/aws-route53';
 import * as r53t from 'aws-cdk-lib/aws-route53-targets';
 
 export interface CdkStackProps {
   lambda: lambda.Code;
   layer: lambda.Code;
+  angular: s3d.ISource;
   zone_name: string;
   record_name: string;
   certificate_arn: string;
