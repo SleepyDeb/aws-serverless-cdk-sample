@@ -29,9 +29,16 @@ export async function getOrder(event: APIGatewayProxyEventV2, context: Context) 
 
     const order = await orderDao.getOrder(orderId);
 
+    if(!order) {
+        return {
+            statusCode: '404',
+            body: JSON.stringify(order)
+        }
+    }
+
     return {
         statusCode: '200',
-        body: JSON.stringify(order)
+        body: JSON.stringify({ message: 'order not found' })
     }
 }
 

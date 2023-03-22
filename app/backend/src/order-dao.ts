@@ -36,7 +36,7 @@ export async function getOrder(orderId: string) {
         Key: { id: orderId }
     }));
 
-    return response.Item!;
+    return response.Item;
 }
 
 
