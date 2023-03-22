@@ -1,9 +1,9 @@
-import { Stack, StackProps } from "aws-cdk-lib";
+import { NestedStack, Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { CdkStackProps } from "./cdk-backend-stack";
 import * as cdk from 'aws-cdk-lib';
 
-export class CdkFrontendStack extends Stack {
+export class CdkFrontendStack extends NestedStack {
     constructor(scope: Construct, id: string, props: StackProps & CdkStackProps) {
         super(scope, id, props);
         

@@ -1,4 +1,4 @@
-import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { NestedStack, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -19,7 +19,7 @@ export interface CdkStackProps {
   cognitoClientId: string;
 }
 
-export class CdkBackendStack extends Stack {
+export class CdkBackendStack extends NestedStack {
   constructor(scope: Construct, id: string, props: StackProps & CdkStackProps) {
     super(scope, id, props);
         

@@ -1,10 +1,9 @@
-import { Stack, StackProps } from "aws-cdk-lib";
+import { NestedStack, Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
-import { CdkStackProps } from "./cdk-backend-stack";
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as cdk from 'aws-cdk-lib';
 
-export class CdkIdpStack extends Stack {
+export class CdkIdpStack extends NestedStack {
     public userPool: cognito.IUserPool
     public clientId: string
     
