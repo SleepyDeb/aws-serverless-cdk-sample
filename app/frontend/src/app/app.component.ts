@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { filter } from 'rxjs';
+import { environment } from 'src/environments/environment';
 import { authCodeFlowConfig } from './auth.config';
 
 @Component({
@@ -10,18 +11,39 @@ import { authCodeFlowConfig } from './auth.config';
 })
 export class AppComponent {
   title = 'demo-spa';
-
   
   constructor(private oauthService: OAuthService) {
     this.oauthService.configure(authCodeFlowConfig);
-    this.oauthService.loadDiscoveryDocumentAndLogin();
-
-    this.oauthService.setupAutomaticSilentRefresh();
+    this.oauthService.loadDiscoveryDocument(environment.openidconnectEndpoint).then(manifest =>{      
+      this.oauthService.tryLogin();
+      this.oauthService.setupAutomaticSilentRefresh();
+    })
 
     // Automatically load user profile
     this.oauthService.events
       .pipe(filter((e) => e.type === 'token_received'))
       .subscribe((_) => this.oauthService.loadUserProfile());
+  }
+
+  public get apiUrl() {
+    return environment.apiEndpoint;
+  }
+
+  public get manifestUrl() {
+    return environment.openidconnectEndpoint;
+  }
+
+  public get loggedIn() {
+    return this.oauthService.hasValidAccessToken();
+  }
+
+  public login() {
+    console.info("login");
+    this.oauthService.tryLoginCodeFlow();
+  }
+
+  public logout() {
+    this.oauthService.logOut();
   }
 
   get userName(): string {

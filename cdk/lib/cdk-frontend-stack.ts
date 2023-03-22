@@ -159,7 +159,7 @@ export class CdkFrontendStack extends NestedStack {
 
         const envDeclaration64 = Buffer.from(`export const environment = {
             apiEndpoint: "${props.record_name}.${props.zone_name}",
-            openidconnectIssuer: "${props.cognitoOpenIdConnectUrl}",
+            openidconnectEndpoint: "${props.cognitoOpenIdConnectUrl}",
             clientId: "${props.cognitoClientId}"
         };`).toString('base64')
 
