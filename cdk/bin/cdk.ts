@@ -12,6 +12,8 @@ import * as credentialProviderNode from "@aws-sdk/credential-provider-node";
 import * as configResolver from "@aws-sdk/config-resolver";
 import * as sts from "@aws-sdk/client-sts";
 import * as ec2 from "@aws-sdk/client-ec2";
+import { CdkIdpStack } from '../lib/cdk-idp-stack';
+import { CdkFrontendStack } from '../lib/cdk-frontend-stack';
 
 async function cmd_run(command: string) {
     return new Promise((resolve, reject)=>{
@@ -95,8 +97,20 @@ export async function main() {
     const env = await loadEnvironment();
     const app = new cdk.App();
 
-    new CdkBackendStack(app, 'CdkStack', {
-        stackName: 'demo-app',
+    new CdkIdpStack(app, 'IdpStack', {
+        stackName: 'demo-app-idp',
+        env,
+        ... build,
+        ... config
+    });
+    new CdkBackendStack(app, 'BackendStack', {
+        stackName: 'demo-app-backend',
+        env,
+        ... build,
+        ... config
+    });
+    new CdkFrontendStack(app, 'FrontendStack', {
+        stackName: 'demo-app-frontend',
         env,
         ... build,
         ... config
