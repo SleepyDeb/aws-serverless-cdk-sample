@@ -4,7 +4,7 @@ import { CdkStackProps } from "./cdk-backend-stack";
 import * as cdk from 'aws-cdk-lib';
 
 export class CdkFrontendStack extends Stack {
-    constructor(scope: Construct, id: string, props: StackProps & CdkStackProps) {
+    constructor(scope: Construct, id: string, props: StackProps & { zone_name: string, dash_record_name: string }) {
         super(scope, id, props);
         
         const zoneName = props.zone_name;
@@ -12,7 +12,7 @@ export class CdkFrontendStack extends Stack {
             domainName: zoneName
         });
         
-        const recordName = `www`;
+        const recordName = props.dash_record_name;
         const fullDomainName = `${recordName}.${zoneName}`;
 
         // Create TLS certificate + automatic DNS validation
@@ -70,7 +70,7 @@ export class CdkFrontendStack extends Stack {
                 s3OriginSource: {
                     s3BucketSource: bucket,
                     originAccessIdentity: cloudfrontOAI,
-                    originPath: '/web'
+                    originPath: '/demo-spa'
                 },
                 behaviors: [{
                     isDefaultBehavior: true,
@@ -166,7 +166,7 @@ export class CdkFrontendStack extends Stack {
                     build: {
                         commands: [
                             // Add cognito variables
-                            "cd nps-web",
+                            "cd app/frontend/",
                             "npm install",
                             "npx ng build --configuration=production"
                         ]
@@ -174,7 +174,7 @@ export class CdkFrontendStack extends Stack {
                     post_build: {
                         commands: [
                             `aws s3 rm --recursive s3://${bucket.bucketName}/`,
-                            `aws s3 cp --recursive ./dist/nps-web/ s3://${bucket.bucketName}/nps-web/`,
+                            `aws s3 cp --recursive ./dist/demo-spa/ s3://${bucket.bucketName}/demo-spa/`,
                             `aws cloudfront create-invalidation --distribution-id ${distribution.distributionId} --paths "/*"`
                         ]
                     }

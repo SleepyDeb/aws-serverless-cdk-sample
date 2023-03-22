@@ -1,5 +1,6 @@
 import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamo from 'aws-cdk-lib/aws-dynamodb';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
@@ -13,6 +14,8 @@ export interface CdkStackProps {
   zone_name: string;
   record_name: string;
   certificate_arn: string;
+  cognito: cognito.IUserPool;
+  cognitoClientId: string;
 }
 
 export class CdkBackendStack extends Stack {
@@ -69,9 +72,16 @@ export class CdkBackendStack extends Stack {
       }
     });
     ordersTable.grantReadData(getOrderLambda);
+    const defaultCorsPreflightOptions = {
+      allowHeaders: apigw.Cors.DEFAULT_HEADERS,
+      allowMethods: apigw.Cors.ALL_METHODS,
+      allowCredentials: true,
+      allowOrigins: apigw.Cors.ALL_ORIGINS
+    } as apigw.CorsOptions;
 
     const certificate = acm.Certificate.fromCertificateArn(this, `acm-certificate`, props.certificate_arn);
     const api = new apigw.RestApi(this, 'orders-api', {
+      defaultCorsPreflightOptions,
       domainName: {
         domainName: `${props.record_name}.${props.zone_name}`,
         certificate
@@ -87,12 +97,32 @@ export class CdkBackendStack extends Stack {
       recordName: props.record_name,
       target: r53.RecordTarget.fromAlias(new r53t.ApiGateway(api))
     });
-    
+
+    const auth = new apigw.CognitoUserPoolsAuthorizer(this, 'app-api-authorizer', {
+      cognitoUserPools: [ props.cognito ]
+    });
+
+    const authProps = {
+      authorizer: auth,
+      authorizationType: apigw.AuthorizationType.COGNITO,
+    };
     const orders = api.root.addResource('orders');
-    orders.addMethod('POST', new apigw.LambdaIntegration(postOrderLambda));
-    orders.addMethod('GET', new apigw.LambdaIntegration(listOrderLambda));
+    orders.addMethod('POST', new apigw.LambdaIntegration(postOrderLambda), {
+      ... authProps,
+      operationName: 'createOrder',
+      authorizationScopes: [ `app/write` ]
+    });
+    orders.addMethod('GET', new apigw.LambdaIntegration(listOrderLambda), {
+      ... authProps,
+      operationName: 'getOrder',
+      authorizationScopes: [ `app/read` ]
+    });
 
     const ordersOrderId = orders.addResource("{orderId}");
-    ordersOrderId.addMethod("GET", new apigw.LambdaIntegration(getOrderLambda));
+    ordersOrderId.addMethod("GET", new apigw.LambdaIntegration(getOrderLambda), {
+      ... authProps,
+      operationName: 'getOrders',
+      authorizationScopes: [ `app/read` ]
+    });
   }
 }
