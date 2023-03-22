@@ -6,12 +6,12 @@ import * as cdk from 'aws-cdk-lib';
 export class CdkFrontendStack extends NestedStack {
     constructor(scope: Construct, id: string, props: StackProps & CdkStackProps & { cognitoOpenIdConnectUrl: string }) {
         super(scope, id, props);
-        
+
         const zoneName = props.zone_name;
         const zone = cdk.aws_route53.HostedZone.fromLookup(this, `route53-hosted-zone`, {
             domainName: zoneName
         });
-        
+
         const recordName = props.dash_record_name;
         const fullDomainName = `${recordName}.${zoneName}`;
 
@@ -22,7 +22,7 @@ export class CdkFrontendStack extends NestedStack {
             region: 'us-east-1', // Cloudfront only checks this region for certificates.
             subjectAlternativeNames: [ fullDomainName, zoneName ]
         }).certificateArn;
-        
+
         const bucket = new cdk.aws_s3.Bucket(this, `frontend-bucket`, {
             bucketName: `${props.stackName}-bucket`,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -158,14 +158,13 @@ export class CdkFrontendStack extends NestedStack {
         });
 
         const envDeclaration64 = Buffer.from(`export const environment = {
-            apiEndpoint: "${props.record_name}",
-            openidconnectEndpoint: "${props.cognitoOpenIdConnectUrl}",
+            apiEndpoint: "${props.record_name}.${props.zone_name}",
+            openidconnectIssuer: "${props.cognitoOpenIdConnectUrl}",
             clientId: "${props.cognitoClientId}"
         };`).toString('base64')
 
         new cdk.aws_s3_deployment.BucketDeployment(this, 'web-bucket-deployment', {
             sources: [ props.angular ],
-            destinationKeyPrefix: 'dashboard',
             destinationBucket: bucket,
             distribution,
             distributionPaths: ['/*'],
@@ -183,7 +182,7 @@ export class CdkFrontendStack extends NestedStack {
                         commands: [
                             // Add cognito variables
                             "cd app/frontend/",
-                            `echo ${envDeclaration64} | base64 --decode > src/environments/environment.production.ts`,
+                            `echo ${envDeclaration64} | base64 --decode > src/environments/environment.ts`,
                             "npm install",
                             "npm run build -- --configuration=production"
                         ]
