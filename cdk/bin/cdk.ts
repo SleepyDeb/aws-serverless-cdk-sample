@@ -4,8 +4,14 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as fsex from 'fs-extra';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as file from 'fs/promises';
 import { CdkStack } from '../lib/cdk-stack';
 import { exec } from 'child_process';
+import * as nodeConfigProvider from "@aws-sdk/node-config-provider";
+import * as credentialProviderNode from "@aws-sdk/credential-provider-node";
+import * as configResolver from "@aws-sdk/config-resolver";
+import * as sts from "@aws-sdk/client-sts";
+import * as ec2 from "@aws-sdk/client-ec2";
 
 async function cmd_run(command: string) {
     return new Promise((resolve, reject)=>{
@@ -29,7 +35,7 @@ export async function createLambdaAndLayerAssets() {
     process.chdir(backendSourceDir);
     await cmd_run('npm install');
     await cmd_run('npm run build');
-    
+
     const buildOutput = path.join(backendSourceDir, '/dist/src');
     const lambdaCodeAsset = lambda.Code.fromAsset(buildOutput);
 
@@ -48,12 +54,52 @@ export async function createLambdaAndLayerAssets() {
     }
 }
 
+export async function loadConfiguration() {
+    const configFilePath = path.resolve(__dirname, '../config.json');
+    return JSON.parse((await file.readFile(configFilePath)).toString()) as {
+        zone_name: string,
+        record_name: string,
+        certificate_arn: string
+    };
+}
+
+
+export async function loadEnvironment() {
+    const region = await nodeConfigProvider.loadConfig(configResolver.NODE_REGION_CONFIG_OPTIONS, configResolver.NODE_REGION_CONFIG_FILE_OPTIONS)();
+
+    // I need to retrieve the current user from STS
+    // NB: it would only work locally
+    const stsClient = new sts.STSClient({ });
+    const awsIdentity = await stsClient.send(new sts.GetCallerIdentityCommand({}));
+
+    const account = awsIdentity.Account!;
+    const userArn = awsIdentity.Arn!
+
+    const ec2Client = new ec2.EC2Client({});
+    const describedZones = await ec2Client.send(new ec2.DescribeAvailabilityZonesCommand({ }));
+    const zones = describedZones.AvailabilityZones!.map(z => z.ZoneName!);
+    const profile = process.env['AWS_PROFILE'];
+
+    return {
+        account,
+        region,
+        userArn: userArn,
+        zones,
+        profile
+    }
+}
+
 export async function main() {
     const build = await createLambdaAndLayerAssets();
+    const config = await loadConfiguration();
+    const env = await loadEnvironment();
     const app = new cdk.App();
-    new CdkStack(app, 'CdkStack', { 
-        stackName: 'demo-app', 
-        ... build
+
+    new CdkStack(app, 'CdkStack', {
+        stackName: 'demo-app',
+        env,
+        ... build,
+        ... config
     });
 }
 
