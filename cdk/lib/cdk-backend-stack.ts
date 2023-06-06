@@ -75,6 +75,7 @@ export class CdkBackendStack extends NestedStack {
       }
     });
     ordersTable.grantReadData(getOrderLambda);
+    
     const defaultCorsPreflightOptions = {
       allowHeaders: apigw.Cors.DEFAULT_HEADERS,
       allowMethods: apigw.Cors.ALL_METHODS,
