@@ -32,13 +32,13 @@ export async function getOrder(event: APIGatewayProxyEventV2, context: Context) 
     if(!order) {
         return {
             statusCode: '404',
-            body: JSON.stringify(order)
+            body: JSON.stringify({ message: 'order not found' })
         }
     }
 
     return {
         statusCode: '200',
-        body: JSON.stringify({ message: 'order not found' })
+        body: JSON.stringify(order)
     }
 }
 
