@@ -31,7 +31,7 @@ export class CdkBackendStack extends NestedStack {
         name: 'id',
         type: dynamo.AttributeType.STRING
       },
-      removalPolicy: RemovalPolicy.DESTROY
+      removalPolicy: RemovalPolicy.DESTROY  
     });
 
     const basicLambdaLayer = new lambda.LayerVersion(this, `NodeModulesDepsLayer`, {
@@ -112,7 +112,7 @@ export class CdkBackendStack extends NestedStack {
     };
     const orders = api.root.addResource('orders');
     orders.addMethod('POST', new apigw.LambdaIntegration(postOrderLambda), {
-      ... authProps,
+      ... authProps,  
       operationName: 'createOrder',
       authorizationScopes: [ `app/write` ]
     });
